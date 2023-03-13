@@ -1,5 +1,6 @@
-import BasePlayer
+from players.BasePlayer import BasePlayer
 
 
 class RandomBot(BasePlayer):
-    raise NotImplementedError
+    def __init__(self, verbose):
+        super().__init__(verbose)
