@@ -7,6 +7,7 @@ from players.OptimizedBot import OptimizedBot
 from players.ReinforcementLearningBot import ReinforcementLearningBot
 import argparse
 import arcade
+import random
 
 
 class Blockade(arcade.Window):
@@ -16,6 +17,7 @@ class Blockade(arcade.Window):
         max_width = min(arena_size * tile_size, int(arcade.window_commands.get_display_size()[0]))
         max_height = min(arena_size * tile_size, int(arcade.window_commands.get_display_size()[1]))
         self.actual_window_size = min(max_width, max_height)
+        self.actual_tile_size = self.actual_window_size / arena_size
         super().__init__(width=self.actual_window_size, height=self.actual_window_size, title='Blockade',
                          visible=not window_hidden)
         self.background_color = arcade.color.ARSENIC
@@ -30,18 +32,41 @@ class Blockade(arcade.Window):
 
         # game init
         self.game_matrix = None
-        self.frame_counter = None
+        # game matrix internal encoding:
+        #  0 - empty
+        #  1 - player1 head
+        # -1 - player1 tail
+        #  2 - player2 head
+        # -2 - player2 tail
+        self.tile_colors = {1: (0, 153, 51), -1: (0, 204, 68), 2: (204, 0, 0), -2: (255, 51, 51)}  # RGB colors
 
     def setup(self):
         # game preparation
-        # TODO
-        self.game_matrix = np.zeros((self.arena_size, self.arena_size))
-        pass
+        self.game_matrix = np.zeros((self.arena_size, self.arena_size), dtype=int)
+        starting_position = int(self.arena_size / 4)
+        # player1 starts in the bottom-right corner
+        self.game_matrix[self.arena_size - starting_position - 1, self.arena_size - starting_position - 1] = 1
+        # player2 starts in the upper-left corner
+        self.game_matrix[starting_position, starting_position] = 2
 
     def on_draw(self):
         # main game loop
         self.clear()
-        # TODO
+
+        # drawing tester
+        # for y in range(self.game_matrix.shape[0]):
+        #     for x in range(self.game_matrix.shape[1]):
+        #         self.game_matrix[y, x] = random.choice([0, 1, -1, 2, -2])
+
+        # game matrix drawing
+        # y-axis is adjusted for different coordinate systems of np.array and Python Arcade (matrix vs Cartesian)
+        for y in range(self.game_matrix.shape[0]):
+            for x in range(self.game_matrix.shape[1]):
+                if self.game_matrix[y, x] != 0:
+                    arcade.draw_rectangle_filled(center_x=(x + 0.5) * self.actual_tile_size,
+                                                 center_y=(self.arena_size - y - 0.5) * self.actual_tile_size,
+                                                 width=self.actual_tile_size, height=self.actual_tile_size,
+                                                 color=self.tile_colors[self.game_matrix[y, x]])
 
 
 if __name__ == '__main__':
