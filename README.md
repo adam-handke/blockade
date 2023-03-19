@@ -9,6 +9,8 @@ The game currently supports only 2 players. Humans can use arrows or WSAD. There
 
 The player which survives wins!
 
+![Blockade screenshot](https://github.com/adam-handke/blockade/blob/main/screenshot.jpg?raw=true)
+
 ## Requirements
 
 #TODO
