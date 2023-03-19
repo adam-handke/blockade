@@ -20,19 +20,21 @@ python blockade.py [-h]
                    [-p1 {arrows,wsad,random,heuristic,optimized,rl}]
                    [-p2 {arrows,wsad,random,heuristic,optimized,rl}]
                    [-a {10,11,12,13,14,15,16,17,18,19,20}]
-                   [-t {25,30,35,40,45,50,55,60,65,70,75}]
-                   [-s GAME_SPEED] 
+                   [-t {15,20,25,30,35,40,45,50,55,60,65,70,75}]
+                   [-s GAME_SPEED]
+                   [-r RANDOM_SEED]
                    [-w]
                    [-v]
 ```
 
 Arguments:
   - `-h`, `--help` - show help message and exit;
-  - `-p1` `--player1` - type of the first player (`arrows`, `wsad`, `random`, `heuristic`, `optimized`, `rl`), default: `arrows`;
-  - `-p2`, `--player2` - type of the second player (`arrows`, `wsad`, `random`, `heuristic`, `optimized`, `rl`), default: `random`;
+  - `-p1`, `--player1` - type of the first player, green color (`arrows`, `wsad`, `random`, `heuristic`, `optimized`, `rl`), default: `arrows`;
+  - `-p2`, `--player2` - type of the second player, red color (`arrows`, `wsad`, `random`, `heuristic`, `optimized`, `rl`), default: `random`;
   - `-a`, `--arena-size` - size of the square game arena (in tiles, `10`-`20`), default: `10`;
-  - `-t`, `--tile-size` - size of a square game tile (in pixels, `25`-`75`), default: `50`;
+  - `-t`, `--tile-size` - size of a square game tile (in pixels, `15`-`75`), default: `50`;
   - `-s`, `--game-speed` - game speed, number of moves per second (positive float), default: `2.0`;
+  - `-r`, `--random-seed` - RNG initialization seed (integer), default: `42`;
   - `-w`, `--window-hidden` - hides game window, default: `False`;
   - `-v`, `--verbose` - verbose switch, prints game info to the terminal, default: `False`.
 

@@ -1,13 +1,14 @@
+import argparse
+import arcade
 import numpy as np
+import random
+import time
 
 from players.HumanPlayer import HumanPlayer
 from players.RandomBot import RandomBot
 from players.HeuristicBot import HeuristicBot
 from players.OptimizedBot import OptimizedBot
 from players.ReinforcementLearningBot import ReinforcementLearningBot
-import argparse
-import arcade
-import random
 
 
 class Blockade(arcade.Window):
@@ -39,6 +40,8 @@ class Blockade(arcade.Window):
         #  2 - player2 head
         # -2 - player2 tail
         self.tile_colors = {1: (0, 153, 51), -1: (0, 204, 68), 2: (204, 0, 0), -2: (255, 51, 51)}  # RGB colors
+        self.move_dict = {'up': (1, 0), 'down': (-1, 0), 'left': (0, -1), 'right': (0, 1)}  # (y, x) offset tuples
+        self.move_counter = 0
 
     def setup(self):
         # game preparation
@@ -49,24 +52,71 @@ class Blockade(arcade.Window):
         # player2 starts in the upper-left corner
         self.game_matrix[starting_position, starting_position] = 2
 
+    def find_possible_moves(self, head_y, head_x):
+        possible_moves = []
+        for move in self.move_dict.keys():
+            # check y borders and x borders and free tile
+            if self.game_matrix.shape[0]-1 >= head_y + self.move_dict[move][0] >= 0 \
+                    and self.game_matrix.shape[1]-1 >= head_x + self.move_dict[move][1] >= 0 \
+                    and self.game_matrix[head_y + self.move_dict[move][0], head_x + self.move_dict[move][1]] == 0:
+                possible_moves.append(move)
+        return possible_moves
+
     def on_draw(self):
         # main game loop
-        self.clear()
 
-        # drawing tester
-        # for y in range(self.game_matrix.shape[0]):
-        #     for x in range(self.game_matrix.shape[1]):
-        #         self.game_matrix[y, x] = random.choice([0, 1, -1, 2, -2])
+        # game speed delay (self.set_update_rate() doesn't work)
+        time.sleep(1.0 / self.game_speed)
 
-        # game matrix drawing
-        # y-axis is adjusted for different coordinate systems of np.array and Python Arcade (matrix vs Cartesian)
-        for y in range(self.game_matrix.shape[0]):
-            for x in range(self.game_matrix.shape[1]):
-                if self.game_matrix[y, x] != 0:
-                    arcade.draw_rectangle_filled(center_x=(x + 0.5) * self.actual_tile_size,
-                                                 center_y=(self.arena_size - y - 0.5) * self.actual_tile_size,
-                                                 width=self.actual_tile_size, height=self.actual_tile_size,
-                                                 color=self.tile_colors[self.game_matrix[y, x]])
+        # gather possible moves
+        p1_head_y, p1_head_x = np.where(self.game_matrix == 1)
+        p1_possible_moves = self.find_possible_moves(p1_head_y, p1_head_x)
+        p2_head_y, p2_head_x = np.where(self.game_matrix == 2)
+        p2_possible_moves = self.find_possible_moves(p2_head_y, p2_head_x)
+
+        # if no possible moves: player loses; if both don't have possible moves: draw; else: continue game
+        if len(p1_possible_moves) == 0 and len(p2_possible_moves) == 0:
+            if self.verbose:
+                print('Draw!')
+            self.exit_game()
+        elif len(p1_possible_moves) == 0:
+            if self.verbose:
+                print('Player 2 wins!')
+            self.exit_game()
+        elif len(p2_possible_moves) == 0:
+            if self.verbose:
+                print('Player 1 wins!')
+            self.exit_game()
+        else:
+            # both players have possible moves - ask the players to select their moves
+            self.move_counter += 1
+            p1_move = self.player1.get_move(self.game_matrix, p1_possible_moves)
+            p2_move = self.player2.get_move(self.game_matrix, p2_possible_moves)
+            if self.verbose:
+                print(f'Move {self.move_counter}: '.ljust(10) + f'Player1 goes {p1_move}\tPlayer2 goes {p2_move}',
+                      flush=True)
+            # update player1
+            self.game_matrix[p1_head_y, p1_head_x] = -1
+            self.game_matrix[p1_head_y + self.move_dict[p1_move][0], p1_head_x + self.move_dict[p1_move][1]] = 1
+            # update player2
+            self.game_matrix[p2_head_y, p2_head_x] = -2
+            self.game_matrix[p2_head_y + self.move_dict[p2_move][0], p2_head_x + self.move_dict[p2_move][1]] = 2
+
+            # game matrix drawing
+            self.clear()
+            # y-axis is adjusted for different coordinate systems of np.array and Python Arcade (matrix vs Cartesian)
+            for y in range(self.game_matrix.shape[0]):
+                for x in range(self.game_matrix.shape[1]):
+                    if self.game_matrix[y, x] != 0:
+                        arcade.draw_rectangle_filled(center_x=(x + 0.5) * self.actual_tile_size,
+                                                     center_y=(self.arena_size - y - 0.5) * self.actual_tile_size,
+                                                     width=self.actual_tile_size, height=self.actual_tile_size,
+                                                     color=self.tile_colors[self.game_matrix[y, x]])
+
+    def exit_game(self):
+        time.sleep(1.0 / self.game_speed)
+        self.close()
+        exit()
 
 
 if __name__ == '__main__':
@@ -81,9 +131,10 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--arena-size', help='size of the square game arena (in tiles)', type=int,
                         choices=range(10, 21), default=10)
     parser.add_argument('-t', '--tile-size', help='size of a square game tile (in pixels)', type=int,
-                        choices=range(25, 80, 5), default=50)
+                        choices=range(15, 80, 5), default=50)
     parser.add_argument('-s', '--game-speed', help='game speed, number of moves per second (positive float)',
                         type=float, default=2.0)
+    parser.add_argument('-r', '--random-seed', help='RNG initialization seed', type=int, default=42)
     parser.add_argument('-w', '--window-hidden', help='hides game window', action='store_true')
     parser.add_argument('-v', '--verbose', help='verbose switch, prints game info to the terminal', action='store_true')
     args = parser.parse_args()
@@ -112,8 +163,9 @@ if __name__ == '__main__':
     if args.verbose:
         print(f'Starting a game of Blockade with parameters:', flush=True)
         for i, (key, value) in enumerate(vars(args).items()):
-            print(f'\t{key} = {value}' + (',\n' if i < len(vars(args)) - 1 else ''), end='', flush=True)
+            print(f'\t{key} = {value}' + (',' if i < len(vars(args)) - 1 else ''), flush=True)
 
+    random.seed(args.random_seed)
     game = Blockade(player1=init_player1,
                     player2=init_player2,
                     arena_size=args.arena_size,
@@ -123,4 +175,4 @@ if __name__ == '__main__':
                     verbose=args.verbose)
 
     game.setup()
-    arcade.run()
+    game.run()
