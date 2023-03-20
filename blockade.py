@@ -12,7 +12,7 @@ from players.ReinforcementLearningBot import ReinforcementLearningBot
 
 
 class Blockade(arcade.Window):
-    def __init__(self, player1, player2, arena_size, tile_size, game_speed, window_hidden, verbose):
+    def __init__(self, player1, player2, arena_size, tile_size, game_speed, mute_sound, window_hidden, verbose):
         # arcade init
         # size of the window depends on the arena and tile size but is limited by the screen resolution
         max_width = min(arena_size * tile_size, int(arcade.window_commands.get_display_size()[0]))
@@ -29,6 +29,8 @@ class Blockade(arcade.Window):
         self.arena_size = arena_size
         self.tile_size = tile_size
         self.game_speed = game_speed
+        self.mute_sound = mute_sound
+        self.window_hidden = window_hidden
         self.verbose = verbose
 
         # game init
@@ -44,6 +46,8 @@ class Blockade(arcade.Window):
         self.move_dict = {'up': (-1, 0), 'down': (1, 0), 'left': (0, -1), 'right': (0, 1)}  # (y, x) offset tuples
         self.key_move_dict = {arcade.key.UP: 'up', arcade.key.DOWN: 'down', arcade.key.LEFT: 'left', arcade.key.RIGHT: 'right',
                               arcade.key.W: 'up', arcade.key.S: 'down', arcade.key.A: 'left', arcade.key.D: 'right'}
+        self.sounds = {'move': arcade.load_sound(':resources:sounds/phaseJump1.wav'),
+                       'game_over': arcade.load_sound(':resources:sounds/gameover4.wav')}
         self.move_counter = 0
 
     def setup(self):
@@ -117,15 +121,15 @@ class Blockade(arcade.Window):
                 and (len(p2_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player2, p2_possible_moves)):
             if self.verbose:
                 print('Draw!')
-            self.exit_game()
+            self.exit_game(sound=True)
         elif len(p1_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player1, p1_possible_moves):
             if self.verbose:
                 print('Player 2 wins!')
-            self.exit_game()
+            self.exit_game(sound=True)
         elif len(p2_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player2, p2_possible_moves):
             if self.verbose:
                 print('Player 1 wins!')
-            self.exit_game()
+            self.exit_game(sound=True)
         elif (isinstance(self.player1, HumanPlayer) and self.player1.current_direction is None) \
                 or (isinstance(self.player2, HumanPlayer) and self.player2.current_direction is None):
             # at least one of the players is human and didn't make the first move yet
@@ -150,6 +154,10 @@ class Blockade(arcade.Window):
                     and p1_head[1] + self.move_dict[p1_move][1] == p2_head[1] + self.move_dict[p2_move][1]:
                 self.game_matrix[p1_head[0] + self.move_dict[p1_move][0], p1_head[1] + self.move_dict[p1_move][1]] = 999
 
+            # play move sound
+            if not self.window_hidden and not self.mute_sound:
+                arcade.sound.play_sound(self.sounds['move'], volume=0.3, speed=self.game_speed**0.05)
+
         # game matrix drawing
         self.clear()
         # y-axis is adjusted for different coordinate systems of np.array and Python Arcade (matrix vs Cartesian)
@@ -161,7 +169,9 @@ class Blockade(arcade.Window):
                                                  width=self.actual_tile_size, height=self.actual_tile_size,
                                                  color=self.tile_colors[self.game_matrix[y, x]])
 
-    def exit_game(self):
+    def exit_game(self, sound=False):
+        if sound and not self.window_hidden and not self.mute_sound:
+            arcade.sound.play_sound(self.sounds['game_over'], volume=0.2)
         time.sleep(1.0 / self.game_speed)
         arcade.exit()
 
@@ -182,6 +192,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--game-speed', help='game speed, number of moves per second (positive float)',
                         type=float, default=2.0)
     parser.add_argument('-r', '--random-seed', help='RNG initialization seed', type=int, default=42)
+    parser.add_argument('-m', '--mute-sound', help='mutes game sound effects', action='store_true')
     parser.add_argument('-w', '--window-hidden', help='hides game window', action='store_true')
     parser.add_argument('-v', '--verbose', help='verbose switch, prints game info to the terminal', action='store_true')
     args = parser.parse_args()
@@ -218,6 +229,7 @@ if __name__ == '__main__':
                     arena_size=args.arena_size,
                     tile_size=args.tile_size,
                     game_speed=args.game_speed,
+                    mute_sound=args.mute_sound,
                     window_hidden=args.window_hidden,
                     verbose=args.verbose)
 

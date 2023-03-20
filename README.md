@@ -25,6 +25,7 @@ python blockade.py [-h]
                    [-t {15,20,25,30,35,40,45,50,55,60,65,70,75}]
                    [-s GAME_SPEED]
                    [-r RANDOM_SEED]
+                   [-m]
                    [-w]
                    [-v]
 ```
@@ -37,6 +38,7 @@ Arguments:
   - `-t`, `--tile-size` - size of a square game tile (in pixels, `15`-`75`), default: `50`;
   - `-s`, `--game-speed` - game speed, number of moves per second (positive float), default: `2.0`;
   - `-r`, `--random-seed` - RNG initialization seed (integer), default: `42`;
+  - `-m`, `--mute-sound` - mutes game sound effects, default: `False`;
   - `-w`, `--window-hidden` - hides game window, default: `False`;
   - `-v`, `--verbose` - verbose switch, prints game info to the terminal, default: `False`.
 
