@@ -39,7 +39,8 @@ class Blockade(arcade.Window):
         # -1 - player1 tail
         #  2 - player2 head
         # -2 - player2 tail
-        self.tile_colors = {1: (0, 153, 51), -1: (0, 204, 68), 2: (204, 0, 0), -2: (255, 51, 51)}  # RGB colors
+        # 999 - player collision
+        self.tile_colors = {1: (0, 153, 51), -1: (0, 204, 68), 2: (204, 0, 0), -2: (255, 51, 51), 999: (204, 153, 51)}  # RGB colors
         self.move_dict = {'up': (-1, 0), 'down': (1, 0), 'left': (0, -1), 'right': (0, 1)}  # (y, x) offset tuples
         self.key_move_dict = {arcade.key.UP: 'up', arcade.key.DOWN: 'down', arcade.key.LEFT: 'left', arcade.key.RIGHT: 'right',
                               arcade.key.W: 'up', arcade.key.S: 'down', arcade.key.A: 'left', arcade.key.D: 'right'}
@@ -80,20 +81,24 @@ class Blockade(arcade.Window):
         elif self.verbose:
             print(f'Unknown keyboard input: {symbol}', flush=True)
 
-    def find_possible_moves(self, head_y, head_x):
-        possible_moves = []
+    def find_possible_moves(self, head):
+        possible_moves = dict()
+        # no head found - no possible moves
+        if len(head[0]) == 0 or len(head[1]) == 0:
+            return possible_moves
+
         for move in self.move_dict.keys():
             # check y borders and x borders and free tile
-            if self.game_matrix.shape[0]-1 >= head_y + self.move_dict[move][0] >= 0 \
-                    and self.game_matrix.shape[1]-1 >= head_x + self.move_dict[move][1] >= 0 \
-                    and self.game_matrix[head_y + self.move_dict[move][0], head_x + self.move_dict[move][1]] == 0:
-                possible_moves.append(move)
+            if self.game_matrix.shape[0]-1 >= head[0] + self.move_dict[move][0] >= 0 \
+                    and self.game_matrix.shape[1]-1 >= head[1] + self.move_dict[move][1] >= 0 \
+                    and self.game_matrix[head[0] + self.move_dict[move][0], head[1] + self.move_dict[move][1]] == 0:
+                possible_moves[move] = self.move_dict[move]
         return possible_moves
 
     def check_human_trying_impossible_move(self, player, possible_moves):
         return isinstance(player, HumanPlayer) \
             and player.current_direction is not None \
-            and player.current_direction not in possible_moves
+            and player.current_direction not in possible_moves.keys()
 
     def on_draw(self):
         # main game loop
@@ -102,10 +107,10 @@ class Blockade(arcade.Window):
         time.sleep(1.0 / self.game_speed)
 
         # gather possible moves
-        p1_head_y, p1_head_x = np.where(self.game_matrix == 1)
-        p1_possible_moves = self.find_possible_moves(p1_head_y, p1_head_x)
-        p2_head_y, p2_head_x = np.where(self.game_matrix == 2)
-        p2_possible_moves = self.find_possible_moves(p2_head_y, p2_head_x)
+        p1_head = np.where(self.game_matrix == 1)
+        p1_possible_moves = self.find_possible_moves(p1_head)
+        p2_head = np.where(self.game_matrix == 2)
+        p2_possible_moves = self.find_possible_moves(p2_head)
 
         # if no possible moves: player loses; if both don't have possible moves: draw; else: continue game
         if (len(p1_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player1, p1_possible_moves)) \
@@ -129,17 +134,21 @@ class Blockade(arcade.Window):
         else:
             # both players have possible moves - ask the players to select their moves
             self.move_counter += 1
-            p1_move = self.player1.get_move(self.game_matrix, p1_possible_moves)
-            p2_move = self.player2.get_move(self.game_matrix, p2_possible_moves)
+            p1_move = self.player1.get_move(self.game_matrix, p1_possible_moves, p1_head, p2_head)
+            p2_move = self.player2.get_move(self.game_matrix, p2_possible_moves, p2_head, p1_head)
             if self.verbose:
                 print(f'Move {self.move_counter}: '.ljust(10) + f'Player1 goes {p1_move}\tPlayer2 goes {p2_move}',
                       flush=True)
             # update player1
-            self.game_matrix[p1_head_y, p1_head_x] = -1
-            self.game_matrix[p1_head_y + self.move_dict[p1_move][0], p1_head_x + self.move_dict[p1_move][1]] = 1
+            self.game_matrix[p1_head[0], p1_head[1]] = -1
+            self.game_matrix[p1_head[0] + self.move_dict[p1_move][0], p1_head[1] + self.move_dict[p1_move][1]] = 1
             # update player2
-            self.game_matrix[p2_head_y, p2_head_x] = -2
-            self.game_matrix[p2_head_y + self.move_dict[p2_move][0], p2_head_x + self.move_dict[p2_move][1]] = 2
+            self.game_matrix[p2_head[0], p2_head[1]] = -2
+            self.game_matrix[p2_head[0] + self.move_dict[p2_move][0], p2_head[1] + self.move_dict[p2_move][1]] = 2
+            # edge case: players tried to move to the same tile (head collision)
+            if p1_head[0] + self.move_dict[p1_move][0] == p2_head[0] + self.move_dict[p2_move][0] \
+                    and p1_head[1] + self.move_dict[p1_move][1] == p2_head[1] + self.move_dict[p2_move][1]:
+                self.game_matrix[p1_head[0] + self.move_dict[p1_move][0], p1_head[1] + self.move_dict[p1_move][1]] = 999
 
         # game matrix drawing
         self.clear()

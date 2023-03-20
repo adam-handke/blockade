@@ -10,8 +10,8 @@ class HumanPlayer(BasePlayer):
     def __str__(self):
         return super().__str__() + f' ({self.keyboard_input})'
 
-    def get_move(self, game_matrix, possible_moves):
-        if self.current_direction in possible_moves:
+    def get_move(self, game_matrix, possible_moves, my_coords, opponent_coords):
+        if self.current_direction in possible_moves.keys():
             return self.current_direction
         else:
             raise ValueError(f'{self}: wrong current_direction: {self.current_direction}')
