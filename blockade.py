@@ -40,7 +40,9 @@ class Blockade(arcade.Window):
         #  2 - player2 head
         # -2 - player2 tail
         self.tile_colors = {1: (0, 153, 51), -1: (0, 204, 68), 2: (204, 0, 0), -2: (255, 51, 51)}  # RGB colors
-        self.move_dict = {'up': (1, 0), 'down': (-1, 0), 'left': (0, -1), 'right': (0, 1)}  # (y, x) offset tuples
+        self.move_dict = {'up': (-1, 0), 'down': (1, 0), 'left': (0, -1), 'right': (0, 1)}  # (y, x) offset tuples
+        self.key_move_dict = {arcade.key.UP: 'up', arcade.key.DOWN: 'down', arcade.key.LEFT: 'left', arcade.key.RIGHT: 'right',
+                              arcade.key.W: 'up', arcade.key.S: 'down', arcade.key.A: 'left', arcade.key.D: 'right'}
         self.move_counter = 0
 
     def setup(self):
@@ -52,6 +54,32 @@ class Blockade(arcade.Window):
         # player2 starts in the upper-left corner
         self.game_matrix[starting_position, starting_position] = 2
 
+    def on_key_press(self, symbol: int, modifiers: int):
+        # handling user input
+        # arrows
+        if symbol in [arcade.key.UP, arcade.key.DOWN, arcade.key.LEFT, arcade.key.RIGHT]:
+            if isinstance(self.player1, HumanPlayer) and self.player1.keyboard_input == 'arrows':
+                self.player1.current_direction = self.key_move_dict[symbol]
+            elif isinstance(self.player2, HumanPlayer) and self.player2.keyboard_input == 'arrows':
+                self.player2.current_direction = self.key_move_dict[symbol]
+            elif self.verbose:
+                print(f'No player uses arrows!', flush=True)
+        # WSAD
+        elif symbol in [arcade.key.W, arcade.key.S, arcade.key.A, arcade.key.D]:
+            if isinstance(self.player1, HumanPlayer) and self.player1.keyboard_input == 'wsad':
+                self.player1.current_direction = self.key_move_dict[symbol]
+            elif isinstance(self.player2, HumanPlayer) and self.player2.keyboard_input == 'wsad':
+                self.player2.current_direction = self.key_move_dict[symbol]
+            elif self.verbose:
+                print(f'No player uses WSAD!', flush=True)
+        # other keys
+        elif symbol == arcade.key.ESCAPE:
+            if self.verbose:
+                print('Premature exit on Escape.', flush=True)
+            self.exit_game()
+        elif self.verbose:
+            print(f'Unknown keyboard input: {symbol}', flush=True)
+
     def find_possible_moves(self, head_y, head_x):
         possible_moves = []
         for move in self.move_dict.keys():
@@ -61,6 +89,11 @@ class Blockade(arcade.Window):
                     and self.game_matrix[head_y + self.move_dict[move][0], head_x + self.move_dict[move][1]] == 0:
                 possible_moves.append(move)
         return possible_moves
+
+    def check_human_trying_impossible_move(self, player, possible_moves):
+        return isinstance(player, HumanPlayer) \
+            and player.current_direction is not None \
+            and player.current_direction not in possible_moves
 
     def on_draw(self):
         # main game loop
@@ -75,18 +108,24 @@ class Blockade(arcade.Window):
         p2_possible_moves = self.find_possible_moves(p2_head_y, p2_head_x)
 
         # if no possible moves: player loses; if both don't have possible moves: draw; else: continue game
-        if len(p1_possible_moves) == 0 and len(p2_possible_moves) == 0:
+        if (len(p1_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player1, p1_possible_moves)) \
+                and (len(p2_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player2, p2_possible_moves)):
             if self.verbose:
                 print('Draw!')
             self.exit_game()
-        elif len(p1_possible_moves) == 0:
+        elif len(p1_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player1, p1_possible_moves):
             if self.verbose:
                 print('Player 2 wins!')
             self.exit_game()
-        elif len(p2_possible_moves) == 0:
+        elif len(p2_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player2, p2_possible_moves):
             if self.verbose:
                 print('Player 1 wins!')
             self.exit_game()
+        elif (isinstance(self.player1, HumanPlayer) and self.player1.current_direction is None) \
+                or (isinstance(self.player2, HumanPlayer) and self.player2.current_direction is None):
+            # at least one of the players is human and didn't make the first move yet
+            if self.verbose:
+                print('Waiting for human input!', flush=True)
         else:
             # both players have possible moves - ask the players to select their moves
             self.move_counter += 1
@@ -102,21 +141,20 @@ class Blockade(arcade.Window):
             self.game_matrix[p2_head_y, p2_head_x] = -2
             self.game_matrix[p2_head_y + self.move_dict[p2_move][0], p2_head_x + self.move_dict[p2_move][1]] = 2
 
-            # game matrix drawing
-            self.clear()
-            # y-axis is adjusted for different coordinate systems of np.array and Python Arcade (matrix vs Cartesian)
-            for y in range(self.game_matrix.shape[0]):
-                for x in range(self.game_matrix.shape[1]):
-                    if self.game_matrix[y, x] != 0:
-                        arcade.draw_rectangle_filled(center_x=(x + 0.5) * self.actual_tile_size,
-                                                     center_y=(self.arena_size - y - 0.5) * self.actual_tile_size,
-                                                     width=self.actual_tile_size, height=self.actual_tile_size,
-                                                     color=self.tile_colors[self.game_matrix[y, x]])
+        # game matrix drawing
+        self.clear()
+        # y-axis is adjusted for different coordinate systems of np.array and Python Arcade (matrix vs Cartesian)
+        for y in range(self.game_matrix.shape[0]):
+            for x in range(self.game_matrix.shape[1]):
+                if self.game_matrix[y, x] != 0:
+                    arcade.draw_rectangle_filled(center_x=(x + 0.5) * self.actual_tile_size,
+                                                 center_y=(self.arena_size - y - 0.5) * self.actual_tile_size,
+                                                 width=self.actual_tile_size, height=self.actual_tile_size,
+                                                 color=self.tile_colors[self.game_matrix[y, x]])
 
     def exit_game(self):
         time.sleep(1.0 / self.game_speed)
-        self.close()
-        exit()
+        arcade.exit()
 
 
 if __name__ == '__main__':
