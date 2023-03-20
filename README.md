@@ -12,8 +12,10 @@ The player which survives wins!
 ![Blockade screenshot](https://github.com/adam-handke/blockade/blob/main/screenshot.jpg?raw=true)
 
 ## Requirements
+- Arcade
+- NumPy
 
-#TODO
+Details in `requirements.txt`.
 
 ## Running
 
