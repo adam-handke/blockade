@@ -4,7 +4,7 @@ Python remake of [a 1976 multiplayer snake-like game](https://en.wikipedia.org/w
 The game currently supports only 2 players. Humans can use arrows or WSAD. There are 4 types of AI bots:
 - **Random** - randomly selects one of the possible move directions (avoids immediate death until it's inevitable).
 - **Heuristic** - always chases the opponent while dodging death (moves scored by Manhattan distance to the opponent and available area, move is randomly selected in case of a tie).
-- **Optimized** - the best bot achieved in an evolutionary optimization process.
+- **Optimized** - the best bot achieved in an evolutionary optimization process, similar to the Heuristic bot but the behavior is modified by 4 weights (agoraphillic/agoraphobic, aggressive/elusive, evasive/ballsy, preferring straight lines/turns).
 - **Reinforcement learning** - bot trained from many games as a policy.
 
 The player which survives wins!

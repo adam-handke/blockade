@@ -49,6 +49,12 @@ class Blockade(arcade.Window):
         self.sounds = {'move': arcade.load_sound(':resources:sounds/phaseJump1.wav'),
                        'game_over': arcade.load_sound(':resources:sounds/gameover4.wav')}
         self.move_counter = 0
+        # game outcome:
+        # None - unfinished
+        # 0 - draw
+        # 1 - player1 won
+        # 2 - player2 won
+        self.outcome = None
 
     def setup(self):
         # game preparation
@@ -58,6 +64,8 @@ class Blockade(arcade.Window):
         self.game_matrix[self.arena_size - starting_position - 1, self.arena_size - starting_position - 1] = 1
         # player2 starts in the upper-left corner
         self.game_matrix[starting_position, starting_position] = 2
+        # reset game outcome
+        self.outcome = None
 
     def on_key_press(self, symbol: int, modifiers: int):
         # handling user input
@@ -121,14 +129,17 @@ class Blockade(arcade.Window):
                 and (len(p2_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player2, p2_possible_moves)):
             if self.verbose:
                 print('Draw!')
+            self.outcome = 0
             self.exit_game(sound=True)
         elif len(p1_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player1, p1_possible_moves):
             if self.verbose:
                 print('Player 2 wins!')
+            self.outcome = 2
             self.exit_game(sound=True)
         elif len(p2_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player2, p2_possible_moves):
             if self.verbose:
                 print('Player 1 wins!')
+            self.outcome = 1
             self.exit_game(sound=True)
         elif (isinstance(self.player1, HumanPlayer) and self.player1.current_direction is None) \
                 or (isinstance(self.player2, HumanPlayer) and self.player2.current_direction is None):
