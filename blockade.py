@@ -11,30 +11,16 @@ from players.OptimizedBot import OptimizedBot
 from players.ReinforcementLearningBot import ReinforcementLearningBot
 
 
-class Blockade(arcade.Window):
-    def __init__(self, player1, player2, arena_size, tile_size, game_speed, mute_sound, window_hidden, verbose):
-        # arcade init
-        # size of the window depends on the arena and tile size but is limited by the screen resolution
-        max_width = min(arena_size * tile_size, int(arcade.window_commands.get_display_size()[0]))
-        max_height = min(arena_size * tile_size, int(arcade.window_commands.get_display_size()[1]))
-        self.actual_window_size = min(max_width, max_height)
-        self.actual_tile_size = self.actual_window_size / arena_size
-        super().__init__(width=self.actual_window_size, height=self.actual_window_size, title='Blockade',
-                         visible=not window_hidden)
-        self.background_color = arcade.color.ARSENIC
-
+class Blockade:
+    def __init__(self, player1, player2, arena_size, verbose):
         # command line arguments init
         self.player1 = player1
         self.player2 = player2
         self.arena_size = arena_size
-        self.tile_size = tile_size
-        self.game_speed = game_speed
-        self.mute_sound = mute_sound
-        self.window_hidden = window_hidden
         self.verbose = verbose
 
         # game init
-        self.game_matrix = None
+        self.game_matrix = np.zeros((self.arena_size, self.arena_size), dtype=int)
         # game matrix internal encoding:
         #  0 - empty
         #  1 - player1 head
@@ -42,56 +28,15 @@ class Blockade(arcade.Window):
         #  2 - player2 head
         # -2 - player2 tail
         # 999 - player collision
-        self.tile_colors = {1: (0, 153, 51), -1: (0, 204, 68), 2: (204, 0, 0), -2: (255, 51, 51), 999: (204, 153, 51)}  # RGB colors
-        self.move_dict = {'up': (-1, 0), 'down': (1, 0), 'left': (0, -1), 'right': (0, 1)}  # (y, x) offset tuples
-        self.key_move_dict = {arcade.key.UP: 'up', arcade.key.DOWN: 'down', arcade.key.LEFT: 'left', arcade.key.RIGHT: 'right',
-                              arcade.key.W: 'up', arcade.key.S: 'down', arcade.key.A: 'left', arcade.key.D: 'right'}
-        self.sounds = {'move': arcade.load_sound(':resources:sounds/phaseJump1.wav'),
-                       'game_over': arcade.load_sound(':resources:sounds/gameover4.wav')}
-        self.move_counter = 0
-        # game outcome:
-        # None - unfinished
-        # 0 - draw
-        # 1 - player1 won
-        # 2 - player2 won
-        self.outcome = None
-
-    def setup(self):
-        # game preparation
-        self.game_matrix = np.zeros((self.arena_size, self.arena_size), dtype=int)
         starting_position = int(self.arena_size / 4)
         # player1 starts in the bottom-right corner
         self.game_matrix[self.arena_size - starting_position - 1, self.arena_size - starting_position - 1] = 1
         # player2 starts in the upper-left corner
         self.game_matrix[starting_position, starting_position] = 2
-        # reset game outcome
-        self.outcome = None
 
-    def on_key_press(self, symbol: int, modifiers: int):
-        # handling user input
-        # arrows
-        if symbol in [arcade.key.UP, arcade.key.DOWN, arcade.key.LEFT, arcade.key.RIGHT]:
-            if isinstance(self.player1, HumanPlayer) and self.player1.keyboard_input == 'arrows':
-                self.player1.current_direction = self.key_move_dict[symbol]
-            elif isinstance(self.player2, HumanPlayer) and self.player2.keyboard_input == 'arrows':
-                self.player2.current_direction = self.key_move_dict[symbol]
-            elif self.verbose:
-                print(f'No player uses arrows!', flush=True)
-        # WSAD
-        elif symbol in [arcade.key.W, arcade.key.S, arcade.key.A, arcade.key.D]:
-            if isinstance(self.player1, HumanPlayer) and self.player1.keyboard_input == 'wsad':
-                self.player1.current_direction = self.key_move_dict[symbol]
-            elif isinstance(self.player2, HumanPlayer) and self.player2.keyboard_input == 'wsad':
-                self.player2.current_direction = self.key_move_dict[symbol]
-            elif self.verbose:
-                print(f'No player uses WSAD!', flush=True)
-        # other keys
-        elif symbol == arcade.key.ESCAPE:
-            if self.verbose:
-                print('Premature exit on Escape.', flush=True)
-            self.exit_game()
-        elif self.verbose:
-            print(f'Unknown keyboard input: {symbol}', flush=True)
+        self.move_dict = {'up': (-1, 0), 'down': (1, 0), 'left': (0, -1), 'right': (0, 1)}  # (y, x) offset tuples
+        self.move_counter = 0
+        self.max_number_of_moves = int(np.ceil(self.arena_size**2 / 2.0) - 2)
 
     def find_possible_moves(self, head):
         possible_moves = dict()
@@ -112,11 +57,12 @@ class Blockade(arcade.Window):
             and player.current_direction is not None \
             and player.current_direction not in possible_moves.keys()
 
-    def on_draw(self):
-        # main game loop
-
-        # game speed delay (self.set_update_rate() doesn't work)
-        time.sleep(1.0 / self.game_speed)
+    def process_move(self):
+        # returns game outcome:
+        # None - unfinished
+        # 0 - draw
+        # 1 - player1 won
+        # 2 - player2 won
 
         # gather possible moves
         p1_head = np.where(self.game_matrix == 1)
@@ -126,21 +72,19 @@ class Blockade(arcade.Window):
 
         # if no possible moves: player loses; if both don't have possible moves: draw; else: continue game
         if (len(p1_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player1, p1_possible_moves)) \
-                and (len(p2_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player2, p2_possible_moves)):
+                and (len(p2_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player2,
+                                                                                            p2_possible_moves)):
             if self.verbose:
                 print('Draw!')
-            self.outcome = 0
-            self.exit_game(sound=True)
+            return 0
         elif len(p1_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player1, p1_possible_moves):
             if self.verbose:
                 print('Player 2 wins!')
-            self.outcome = 2
-            self.exit_game(sound=True)
+            return 2
         elif len(p2_possible_moves) == 0 or self.check_human_trying_impossible_move(self.player2, p2_possible_moves):
             if self.verbose:
                 print('Player 1 wins!')
-            self.outcome = 1
-            self.exit_game(sound=True)
+            return 1
         elif (isinstance(self.player1, HumanPlayer) and self.player1.current_direction is None) \
                 or (isinstance(self.player2, HumanPlayer) and self.player2.current_direction is None):
             # at least one of the players is human and didn't make the first move yet
@@ -151,6 +95,9 @@ class Blockade(arcade.Window):
             self.move_counter += 1
             p1_move = self.player1.get_move(self.game_matrix, p1_possible_moves, p1_head, p2_head)
             p2_move = self.player2.get_move(self.game_matrix, p2_possible_moves, p2_head, p1_head)
+            if self.move_counter > self.max_number_of_moves:
+                raise RuntimeError(f'counted moves than should be possible: {self.move_counter} '
+                                   f'(should be less than {self.max_number_of_moves})')
             if self.verbose:
                 print(f'Move {self.move_counter}: '.ljust(10) + f'Player1 goes {p1_move}\tPlayer2 goes {p2_move}',
                       flush=True)
@@ -164,10 +111,86 @@ class Blockade(arcade.Window):
             if p1_head[0] + self.move_dict[p1_move][0] == p2_head[0] + self.move_dict[p2_move][0] \
                     and p1_head[1] + self.move_dict[p1_move][1] == p2_head[1] + self.move_dict[p2_move][1]:
                 self.game_matrix[p1_head[0] + self.move_dict[p1_move][0], p1_head[1] + self.move_dict[p1_move][1]] = 999
+            return None
 
+    def run_windowless(self):
+        # mainly for fast bot testing, uses no Arcade backend
+
+        # humans can't play when the window is not visible
+        if isinstance(self.player1, HumanPlayer) or isinstance(self.player2, HumanPlayer):
+            raise ValueError(f'human player can`t participate in a windowless game')
+
+        while True:
+            outcome = self.process_move()
+            if outcome is not None:
+                break
+        return outcome
+
+
+class BlockadeWindowed(Blockade, arcade.Window):
+    # visual mode for humans playing against bots or observing bots fighting against each other
+    def __init__(self, player1, player2, arena_size, tile_size, game_speed, mute_sound, verbose):
+        # arcade init
+        # size of the window depends on the arena and tile size but is limited by the screen resolution
+        max_width = min(arena_size * tile_size, int(arcade.window_commands.get_display_size()[0]))
+        max_height = min(arena_size * tile_size, int(arcade.window_commands.get_display_size()[1]))
+        self.actual_window_size = min(max_width, max_height)
+        self.actual_tile_size = self.actual_window_size / arena_size
+        arcade.Window.__init__(self, width=self.actual_window_size, height=self.actual_window_size, title='Blockade')
+        self.background_color = arcade.color.ARSENIC
+
+        # blockade init
+        Blockade.__init__(self, player1, player2, arena_size, verbose)
+        self.tile_size = tile_size
+        self.game_speed = game_speed
+        self.mute_sound = mute_sound
+        self.tile_colors = {1: (0, 153, 51), -1: (0, 204, 68), 2: (204, 0, 0), -2: (255, 51, 51),
+                            999: (204, 153, 51)}  # RGB colors
+        self.keys = {arcade.key.UP: 'up', arcade.key.DOWN: 'down', arcade.key.LEFT: 'left', arcade.key.RIGHT: 'right',
+                     arcade.key.W: 'up', arcade.key.S: 'down', arcade.key.A: 'left', arcade.key.D: 'right'}
+        self.sounds = {'move': arcade.load_sound(':resources:sounds/phaseJump1.wav'),
+                       'game_over': arcade.load_sound(':resources:sounds/gameover4.wav')}
+
+    def on_key_press(self, symbol: int, modifiers: int):
+        # handling user input
+        # arrows
+        if symbol in [arcade.key.UP, arcade.key.DOWN, arcade.key.LEFT, arcade.key.RIGHT]:
+            if isinstance(self.player1, HumanPlayer) and self.player1.keyboard_input == 'arrows':
+                self.player1.current_direction = self.keys[symbol]
+            elif isinstance(self.player2, HumanPlayer) and self.player2.keyboard_input == 'arrows':
+                self.player2.current_direction = self.keys[symbol]
+            elif self.verbose:
+                print(f'No player uses arrows!', flush=True)
+        # WSAD
+        elif symbol in [arcade.key.W, arcade.key.S, arcade.key.A, arcade.key.D]:
+            if isinstance(self.player1, HumanPlayer) and self.player1.keyboard_input == 'wsad':
+                self.player1.current_direction = self.keys[symbol]
+            elif isinstance(self.player2, HumanPlayer) and self.player2.keyboard_input == 'wsad':
+                self.player2.current_direction = self.keys[symbol]
+            elif self.verbose:
+                print(f'No player uses WSAD!', flush=True)
+        # other keys
+        elif symbol == arcade.key.ESCAPE:
+            if self.verbose:
+                print('Premature exit on Escape.', flush=True)
+            self.exit_game()
+        elif self.verbose:
+            print(f'Unknown keyboard input: {symbol}', flush=True)
+
+    def on_draw(self):
+        # game speed delay (self.set_update_rate() doesn't work)
+        time.sleep(1.0 / self.game_speed)
+
+        outcome = self.process_move()
+        if outcome is not None:
+            # game finished - exit
+            self.exit_game(sound=True)
+        else:
             # play move sound
-            if not self.window_hidden and not self.mute_sound:
-                arcade.sound.play_sound(self.sounds['move'], volume=0.3, speed=self.game_speed**0.05)
+            if not ((isinstance(self.player1, HumanPlayer) and self.player1.current_direction is None)
+                    or (isinstance(self.player2, HumanPlayer) and self.player2.current_direction is None)) \
+                    and not self.mute_sound:
+                arcade.sound.play_sound(self.sounds['move'], volume=0.3, speed=self.game_speed ** 0.05)
 
         # game matrix drawing
         self.clear()
@@ -181,9 +204,9 @@ class Blockade(arcade.Window):
                                                  color=self.tile_colors[self.game_matrix[y, x]])
 
     def exit_game(self, sound=False):
-        if sound and not self.window_hidden and not self.mute_sound:
+        if sound and not self.mute_sound:
             arcade.sound.play_sound(self.sounds['game_over'], volume=0.2)
-        time.sleep(1.0 / self.game_speed)
+        time.sleep(3.0 / self.game_speed)
         arcade.exit()
 
 
@@ -211,7 +234,12 @@ if __name__ == '__main__':
     # human players can't use the same input method
     if player_types[args.player1] == HumanPlayer and player_types[args.player2] == HumanPlayer \
             and args.player1 == args.player2:
-        raise ValueError(f'two human players use the same input method: {args.player1}')
+        raise ValueError(f'two human players can`t use the same input method: {args.player1}')
+
+    # humans can't play when the window is not visible
+    if (player_types[args.player1] == HumanPlayer or player_types[args.player2] == HumanPlayer) \
+            and args.window_hidden:
+        raise ValueError(f'human player can`t play when the window is hidden: --window_hidden / -w')
 
     # assert that game speed is larger than zero
     if args.game_speed <= 0:
@@ -235,14 +263,18 @@ if __name__ == '__main__':
             print(f'\t{key} = {value}' + (',' if i < len(vars(args)) - 1 else ''), flush=True)
 
     random.seed(args.random_seed)
-    game = Blockade(player1=init_player1,
-                    player2=init_player2,
-                    arena_size=args.arena_size,
-                    tile_size=args.tile_size,
-                    game_speed=args.game_speed,
-                    mute_sound=args.mute_sound,
-                    window_hidden=args.window_hidden,
-                    verbose=args.verbose)
-
-    game.setup()
-    game.run()
+    if args.window_hidden:
+        game = Blockade(player1=init_player1,
+                        player2=init_player2,
+                        arena_size=args.arena_size,
+                        verbose=args.verbose)
+        game.run_windowless()
+    else:
+        game = BlockadeWindowed(player1=init_player1,
+                                player2=init_player2,
+                                arena_size=args.arena_size,
+                                tile_size=args.tile_size,
+                                game_speed=args.game_speed,
+                                mute_sound=args.mute_sound,
+                                verbose=args.verbose)
+        game.run()
