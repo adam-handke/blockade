@@ -1,4 +1,5 @@
 # Blockade
+
 Python remake of [a 1976 multiplayer snake-like game](https://en.wikipedia.org/wiki/Blockade_(video_game)) created in [Python Arcade](https://api.arcade.academy/en/latest/).
 
 The game currently supports only 2 players. Humans can use arrows or WSAD. There are 4 types of AI bots:
@@ -11,8 +12,20 @@ The player which survives wins!
 
 ![Blockade screenshot](https://github.com/adam-handke/blockade/blob/main/screenshot.jpg?raw=true)
 
+## Controls
+
+| Action              | `arrows` / `wsad` player |
+|---------------------|--------------------------|
+| Move UP             | 🡅       / W             |
+| Move DOWN           | 🡇       / S             |
+| Move LEFT           | 🡄       / A             |
+| Move RIGHT          | 🡆       / D             |
+| Increase game speed | +                        |
+| Decrease game speed | -                        |
+| Exit                | Escape                   |              
+
 ## Requirements
-- Arcade
+- Python Arcade
 - NumPy
 
 Details in `requirements.txt`.
@@ -32,17 +45,20 @@ python blockade.py [-h]
                    [-v]
 ```
 
-Arguments:
-  - `-h`, `--help` - show help message and exit;
-  - `-p1`, `--player1` - type of the first player, green color (`arrows`, `wsad`, `random`, `heuristic`, `optimized`, `rl`), default: `arrows`;
-  - `-p2`, `--player2` - type of the second player, red color (`arrows`, `wsad`, `random`, `heuristic`, `optimized`, `rl`), default: `random`;
-  - `-a`, `--arena-size` - size of the square game arena (in tiles, `10`-`20`), default: `10`;
-  - `-t`, `--tile-size` - size of a square game tile (in pixels, `15`-`75`), default: `50`;
-  - `-s`, `--game-speed` - game speed, number of moves per second (positive float), default: `2.0`;
-  - `-r`, `--random-seed` - RNG initialization seed (integer), default: `42`;
-  - `-m`, `--mute-sound` - mutes game sound effects, default: `False`;
-  - `-w`, `--window-hidden` - hides game window, default: `False`;
-  - `-v`, `--verbose` - verbose switch, prints game info to the terminal, default: `False`.
+### Arguments:
+
+| Long name         | Short name | Description                                                                 | Options                                                    | Default value |
+|-------------------|------------|-----------------------------------------------------------------------------|------------------------------------------------------------|---------------|
+| `--help`          | `-h`       | Shows help message and exits the game.                                      | [flag]                                                     | `False`       |
+ | `--player1`       | `-p1`      | Type of the first player (green color).                                     | `arrows`, `wsad`, `random`, `heuristic`, `optimized`, `rl` | `arrows`      |
+ | `--player2`       | `-p2`      | Type of the second player (red color).                                      | `arrows`, `wsad`, `random`, `heuristic`, `optimized`, `rl` | `random`      |
+ | `--arena-size`    | `-a`       | Size of the square game arena (in tiles).                                   | Integers between `10`-`20`                                 | `10`          |
+ | `--tile-size`     | `-t`       | Size of a square game tile (in pixels).                                     | Integers between `15`-`75`                                 | `50`          |
+ | `--game-speed`    | `-s`       | Game speed, number of moves per second.                                     | Positive float                                             | `2.0`         |
+ | `--random-seed`   | `-r`       | RNG initialization seed, controls random behaviors of bots.                 | Integer                                                    | `42`          |
+ | `--mute-sound`    | `-m`       | Mutes game sound effects.                                                   | [flag]                                                     | `False`       |
+ | `--window-hidden` | `-w`       | Hides game window (sound and human players are not available in this mode). | [flag]                                                     | `False`       |
+ | `--verbose`       | `-v`       | Verbosity switch, prints game info to the terminal.                         | [flag]                                                     | `False`       |
 
 Note: two human players can't use the same input method at the same time.
 

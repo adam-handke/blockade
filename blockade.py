@@ -143,6 +143,7 @@ class BlockadeWindowed(Blockade, arcade.Window):
         Blockade.__init__(self, player1, player2, arena_size, verbose)
         self.tile_size = tile_size
         self.game_speed = game_speed
+        self.speed_change_step = 1.0
         self.mute_sound = mute_sound
         self.tile_colors = {1: (0, 153, 51), -1: (0, 204, 68), 2: (204, 0, 0), -2: (255, 51, 51),
                             999: (204, 153, 51)}  # RGB colors
@@ -174,6 +175,19 @@ class BlockadeWindowed(Blockade, arcade.Window):
             if self.verbose:
                 print('Premature exit on Escape.', flush=True)
             self.exit_game()
+        elif symbol == arcade.key.EQUAL or symbol == arcade.key.NUM_ADD:
+            self.game_speed += self.speed_change_step
+            if self.verbose:
+                print(f'Increased speed to {self.game_speed}.', flush=True)
+        elif symbol == arcade.key.MINUS or symbol == arcade.key.NUM_SUBTRACT:
+            if self.game_speed > self.speed_change_step * 2:
+                self.game_speed -= self.speed_change_step
+                if self.verbose:
+                    print(f'Decreased speed to {self.game_speed}.', flush=True)
+            else:
+                self.game_speed = self.speed_change_step
+                if self.verbose:
+                    print(f'Speed too low to decrease further: {self.game_speed}.', flush=True)
         elif self.verbose:
             print(f'Unknown keyboard input: {symbol}', flush=True)
 
@@ -206,7 +220,7 @@ class BlockadeWindowed(Blockade, arcade.Window):
     def exit_game(self, sound=False):
         if sound and not self.mute_sound:
             arcade.sound.play_sound(self.sounds['game_over'], volume=0.2)
-        time.sleep(3.0 / self.game_speed)
+        time.sleep(2.0 / self.game_speed)
         arcade.exit()
 
 
@@ -215,9 +229,9 @@ if __name__ == '__main__':
                     'heuristic': HeuristicBot, 'optimized': OptimizedBot, 'rl': ReinforcementLearningBot}
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p1', '--player1', help='type of the first player',
+    parser.add_argument('-p1', '--player1', help='type of the first player (green color)',
                         choices=player_types.keys(), default='arrows')
-    parser.add_argument('-p2', '--player2', help='type of the second player',
+    parser.add_argument('-p2', '--player2', help='type of the second player (red color)',
                         choices=player_types.keys(), default='random')
     parser.add_argument('-a', '--arena-size', help='size of the square game arena (in tiles)', type=int,
                         choices=range(10, 21), default=10)
@@ -225,10 +239,13 @@ if __name__ == '__main__':
                         choices=range(15, 80, 5), default=50)
     parser.add_argument('-s', '--game-speed', help='game speed, number of moves per second (positive float)',
                         type=float, default=2.0)
-    parser.add_argument('-r', '--random-seed', help='RNG initialization seed', type=int, default=42)
-    parser.add_argument('-m', '--mute-sound', help='mutes game sound effects', action='store_true')
-    parser.add_argument('-w', '--window-hidden', help='hides game window', action='store_true')
-    parser.add_argument('-v', '--verbose', help='verbose switch, prints game info to the terminal', action='store_true')
+    parser.add_argument('-r', '--random-seed', help='RNG initialization seed, controls random behaviors of bots',
+                        type=int, default=42)
+    parser.add_argument('-m', '--mute-sound', action='store_true', help='mutes game sound effects')
+    parser.add_argument('-w', '--window-hidden', action='store_true',
+                        help='hides game window (sound and human players are not available in this mode)')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='verbosity switch, prints game info to the terminal')
     args = parser.parse_args()
 
     # human players can't use the same input method
