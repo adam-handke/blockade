@@ -188,6 +188,13 @@ class BlockadeWindowed(Blockade, arcade.Window):
                 self.game_speed = self.speed_change_step
                 if self.verbose:
                     print(f'Speed too low to decrease further: {self.game_speed}.', flush=True)
+        elif symbol == arcade.key.M:
+            self.mute_sound = not self.mute_sound
+            if self.verbose:
+                if self.mute_sound:
+                    print(f'Sound muted.', flush=True)
+                else:
+                    print(f'Sound unmuted.', flush=True)
         elif self.verbose:
             print(f'Unknown keyboard input: {symbol}', flush=True)
 

@@ -14,15 +14,16 @@ The player which survives wins!
 
 ## Controls
 
-| Action              | `arrows` / `wsad` player |
-|---------------------|--------------------------|
-| Move UP             | 🡅       / W             |
-| Move DOWN           | 🡇       / S             |
-| Move LEFT           | 🡄       / A             |
-| Move RIGHT          | 🡆       / D             |
-| Increase game speed | +                        |
-| Decrease game speed | -                        |
-| Exit                | Escape                   |              
+| Action              | Key (`arrows` / `wsad` player) |
+|---------------------|--------------------------------|
+| Move UP             | 🡅       / W                   |
+| Move DOWN           | 🡇       / S                   |
+| Move LEFT           | 🡄       / A                   |
+| Move RIGHT          | 🡆       / D                   |
+| Increase game speed | +                              |
+| Decrease game speed | -                              |
+| Mute/unmute sound   | M                              |
+| Exit                | Escape                         |              
 
 ## Requirements
 - Python Arcade
