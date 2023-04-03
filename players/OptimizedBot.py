@@ -6,7 +6,7 @@ from players.BasePlayer import BasePlayer
 
 
 class OptimizedBot(BasePlayer):
-    def __init__(self, verbose, weights=(1.0, 1.0, 1.0, 0.0)):
+    def __init__(self, verbose, weights=(0.25648373, -0.31488939, -0.12317508, 0.48541348)):
         super().__init__(verbose)
 
         # weights of heuristic score components, values <-1.0, 1.0>
