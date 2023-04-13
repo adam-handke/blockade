@@ -144,6 +144,8 @@ class BlockadeWindowed(Blockade, arcade.Window):
         self.game_over = False
         self.tile_size = tile_size
         self.game_speed = game_speed
+        self.frame_mod = int(np.round(60 / game_speed))
+        self.frame_counter = 0
         self.speed_change_step = 1.0
         self.mute_sound = mute_sound
         self.tile_colors = {1: (0, 153, 51), -1: (0, 204, 68), 2: (204, 0, 0), -2: (255, 51, 51),
@@ -178,15 +180,18 @@ class BlockadeWindowed(Blockade, arcade.Window):
             self.exit_game()
         elif symbol == arcade.key.EQUAL or symbol == arcade.key.NUM_ADD:
             self.game_speed += self.speed_change_step
+            self.frame_mod = int(np.round(60 / self.game_speed))
             if self.verbose:
                 print(f'Increased speed to {self.game_speed}.', flush=True)
         elif symbol == arcade.key.MINUS or symbol == arcade.key.NUM_SUBTRACT:
             if self.game_speed > self.speed_change_step * 2:
                 self.game_speed -= self.speed_change_step
+                self.frame_mod = int(np.round(60 / self.game_speed))
                 if self.verbose:
                     print(f'Decreased speed to {self.game_speed}.', flush=True)
             else:
                 self.game_speed = self.speed_change_step
+                self.frame_mod = int(np.round(60 / self.game_speed))
                 if self.verbose:
                     print(f'Speed too low to decrease further: {self.game_speed}.', flush=True)
         elif symbol == arcade.key.M:
@@ -200,10 +205,8 @@ class BlockadeWindowed(Blockade, arcade.Window):
             print(f'Unknown keyboard input: {symbol}', flush=True)
 
     def on_draw(self):
-        if not self.game_over:
-            # game speed delay (self.set_update_rate() doesn't work)
-            time.sleep(1.0 / self.game_speed)
-
+        self.frame_counter += 1
+        if self.frame_counter % self.frame_mod == 0 and not self.game_over:
             outcome = self.process_move()
             if outcome is not None:
                 # game finished - exit
@@ -215,16 +218,16 @@ class BlockadeWindowed(Blockade, arcade.Window):
                         and not self.mute_sound:
                     arcade.sound.play_sound(self.sounds['move'], volume=0.3, speed=self.game_speed ** 0.05)
 
-            # game matrix drawing
-            self.clear()
-            # y-axis is adjusted for different coordinate systems of np.array and Python Arcade (matrix vs Cartesian)
-            for y in range(self.game_matrix.shape[0]):
-                for x in range(self.game_matrix.shape[1]):
-                    if self.game_matrix[y, x] != 0:
-                        arcade.draw_rectangle_filled(center_x=(x + 0.5) * self.actual_tile_size,
-                                                     center_y=(self.arena_size - y - 0.5) * self.actual_tile_size,
-                                                     width=self.actual_tile_size, height=self.actual_tile_size,
-                                                     color=self.tile_colors[self.game_matrix[y, x]])
+        # game matrix drawing
+        self.clear()
+        # y-axis is adjusted for different coordinate systems of np.array and Python Arcade (matrix vs Cartesian)
+        for y in range(self.game_matrix.shape[0]):
+            for x in range(self.game_matrix.shape[1]):
+                if self.game_matrix[y, x] != 0:
+                    arcade.draw_rectangle_filled(center_x=(x + 0.5) * self.actual_tile_size,
+                                                 center_y=(self.arena_size - y - 0.5) * self.actual_tile_size,
+                                                 width=self.actual_tile_size, height=self.actual_tile_size,
+                                                 color=self.tile_colors[self.game_matrix[y, x]])
 
     def exit_game(self, sound=False):
         self.game_over = True
