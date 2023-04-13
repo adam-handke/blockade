@@ -141,6 +141,7 @@ class BlockadeWindowed(Blockade, arcade.Window):
 
         # blockade init
         Blockade.__init__(self, player1, player2, arena_size, verbose)
+        self.game_over = False
         self.tile_size = tile_size
         self.game_speed = game_speed
         self.speed_change_step = 1.0
@@ -199,32 +200,34 @@ class BlockadeWindowed(Blockade, arcade.Window):
             print(f'Unknown keyboard input: {symbol}', flush=True)
 
     def on_draw(self):
-        # game speed delay (self.set_update_rate() doesn't work)
-        time.sleep(1.0 / self.game_speed)
+        if not self.game_over:
+            # game speed delay (self.set_update_rate() doesn't work)
+            time.sleep(1.0 / self.game_speed)
 
-        outcome = self.process_move()
-        if outcome is not None:
-            # game finished - exit
-            self.exit_game(sound=True)
-        else:
-            # play move sound
-            if not ((isinstance(self.player1, HumanPlayer) and self.player1.current_direction is None)
-                    or (isinstance(self.player2, HumanPlayer) and self.player2.current_direction is None)) \
-                    and not self.mute_sound:
-                arcade.sound.play_sound(self.sounds['move'], volume=0.3, speed=self.game_speed ** 0.05)
+            outcome = self.process_move()
+            if outcome is not None:
+                # game finished - exit
+                self.exit_game(sound=True)
+            else:
+                # play move sound
+                if not ((isinstance(self.player1, HumanPlayer) and self.player1.current_direction is None)
+                        or (isinstance(self.player2, HumanPlayer) and self.player2.current_direction is None)) \
+                        and not self.mute_sound:
+                    arcade.sound.play_sound(self.sounds['move'], volume=0.3, speed=self.game_speed ** 0.05)
 
-        # game matrix drawing
-        self.clear()
-        # y-axis is adjusted for different coordinate systems of np.array and Python Arcade (matrix vs Cartesian)
-        for y in range(self.game_matrix.shape[0]):
-            for x in range(self.game_matrix.shape[1]):
-                if self.game_matrix[y, x] != 0:
-                    arcade.draw_rectangle_filled(center_x=(x + 0.5) * self.actual_tile_size,
-                                                 center_y=(self.arena_size - y - 0.5) * self.actual_tile_size,
-                                                 width=self.actual_tile_size, height=self.actual_tile_size,
-                                                 color=self.tile_colors[self.game_matrix[y, x]])
+            # game matrix drawing
+            self.clear()
+            # y-axis is adjusted for different coordinate systems of np.array and Python Arcade (matrix vs Cartesian)
+            for y in range(self.game_matrix.shape[0]):
+                for x in range(self.game_matrix.shape[1]):
+                    if self.game_matrix[y, x] != 0:
+                        arcade.draw_rectangle_filled(center_x=(x + 0.5) * self.actual_tile_size,
+                                                     center_y=(self.arena_size - y - 0.5) * self.actual_tile_size,
+                                                     width=self.actual_tile_size, height=self.actual_tile_size,
+                                                     color=self.tile_colors[self.game_matrix[y, x]])
 
     def exit_game(self, sound=False):
+        self.game_over = True
         if sound and not self.mute_sound:
             arcade.sound.play_sound(self.sounds['game_over'], volume=0.2)
         time.sleep(2.0 / self.game_speed)
