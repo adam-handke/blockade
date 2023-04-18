@@ -144,9 +144,10 @@ class BlockadeWindowed(Blockade, arcade.Window):
         self.game_over = False
         self.tile_size = tile_size
         self.game_speed = game_speed
-        self.frame_mod = int(np.round(60 / game_speed))
-        self.frame_counter = 0
         self.speed_change_step = 1.0
+        self.max_speed = 60.0
+        self.frame_mod = int(np.round(self.max_speed / self.game_speed))
+        self.frame_counter = 0
         self.mute_sound = mute_sound
         self.tile_colors = {1: (0, 153, 51), -1: (0, 204, 68), 2: (204, 0, 0), -2: (255, 51, 51),
                             999: (204, 153, 51)}  # RGB colors
@@ -154,6 +155,10 @@ class BlockadeWindowed(Blockade, arcade.Window):
                      arcade.key.W: 'up', arcade.key.S: 'down', arcade.key.A: 'left', arcade.key.D: 'right'}
         self.sounds = {'move': arcade.load_sound(':resources:sounds/phaseJump1.wav'),
                        'game_over': arcade.load_sound(':resources:sounds/gameover4.wav')}
+
+    def update_game_speed(self, new_speed):
+        self.game_speed = new_speed
+        self.frame_mod = int(np.round(self.max_speed / new_speed))
 
     def on_key_press(self, symbol: int, modifiers: int):
         # handling user input
@@ -179,19 +184,21 @@ class BlockadeWindowed(Blockade, arcade.Window):
                 print('Premature exit on Escape.', flush=True)
             self.exit_game()
         elif symbol == arcade.key.EQUAL or symbol == arcade.key.NUM_ADD:
-            self.game_speed += self.speed_change_step
-            self.frame_mod = int(np.round(60 / self.game_speed))
-            if self.verbose:
-                print(f'Increased speed to {self.game_speed}.', flush=True)
+            if self.game_speed <= self.max_speed - self.speed_change_step:
+                self.update_game_speed(self.game_speed + self.speed_change_step)
+                if self.verbose:
+                    print(f'Increased speed to {self.game_speed}.', flush=True)
+            else:
+                self.update_game_speed(self.max_speed)
+                if self.verbose:
+                    print(f'Speed too high to increase further: {self.game_speed}.', flush=True)
         elif symbol == arcade.key.MINUS or symbol == arcade.key.NUM_SUBTRACT:
             if self.game_speed > self.speed_change_step * 2:
-                self.game_speed -= self.speed_change_step
-                self.frame_mod = int(np.round(60 / self.game_speed))
+                self.update_game_speed(self.game_speed - self.speed_change_step)
                 if self.verbose:
                     print(f'Decreased speed to {self.game_speed}.', flush=True)
             else:
-                self.game_speed = self.speed_change_step
-                self.frame_mod = int(np.round(60 / self.game_speed))
+                self.update_game_speed(self.speed_change_step)
                 if self.verbose:
                     print(f'Speed too low to decrease further: {self.game_speed}.', flush=True)
         elif symbol == arcade.key.M:
@@ -250,7 +257,7 @@ if __name__ == '__main__':
                         choices=range(10, 21), default=10)
     parser.add_argument('-t', '--tile-size', help='size of a square game tile (in pixels)', type=int,
                         choices=range(15, 80, 5), default=50)
-    parser.add_argument('-s', '--game-speed', help='game speed, number of moves per second (positive float)',
+    parser.add_argument('-s', '--game-speed', help='game speed, number of moves per second (floats between 1.0-60.0)',
                         type=float, default=2.0)
     parser.add_argument('-r', '--random-seed', help='RNG initialization seed, controls random behaviors of bots',
                         type=int, default=42)
@@ -271,9 +278,9 @@ if __name__ == '__main__':
             and args.window_hidden:
         raise ValueError(f'human player can`t play when the window is hidden: --window_hidden / -w')
 
-    # assert that game speed is larger than zero
-    if args.game_speed <= 0:
-        raise ValueError(f'game speed is not positive: {args.game_speed}')
+    # assert that game speed is in <1.0, 60.0>
+    if args.game_speed < 1.0 or args.game_speed > 60.0:
+        raise ValueError(f'game speed is not in interval <1.0, 60.0>: {args.game_speed}')
 
     # create player1
     if player_types[args.player1] == HumanPlayer:

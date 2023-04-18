@@ -51,15 +51,15 @@ python blockade.py [-h]
 | Long name         | Short name | Description                                                                 | Options                                                    | Default value |
 |-------------------|------------|-----------------------------------------------------------------------------|------------------------------------------------------------|---------------|
 | `--help`          | `-h`       | Shows help message and exits the game.                                      | [flag]                                                     | `False`       |
- | `--player1`       | `-p1`      | Type of the first player (green color).                                     | `arrows`, `wsad`, `random`, `heuristic`, `optimized`, `rl` | `arrows`      |
- | `--player2`       | `-p2`      | Type of the second player (red color).                                      | `arrows`, `wsad`, `random`, `heuristic`, `optimized`, `rl` | `random`      |
- | `--arena-size`    | `-a`       | Size of the square game arena (in tiles).                                   | Integers between `10`-`20`                                 | `10`          |
- | `--tile-size`     | `-t`       | Size of a square game tile (in pixels).                                     | Integers between `15`-`75`                                 | `50`          |
- | `--game-speed`    | `-s`       | Game speed, number of moves per second.                                     | Positive float                                             | `2.0`         |
- | `--random-seed`   | `-r`       | RNG initialization seed, controls random behaviors of bots.                 | Integer                                                    | `42`          |
- | `--mute-sound`    | `-m`       | Mutes game sound effects.                                                   | [flag]                                                     | `False`       |
- | `--window-hidden` | `-w`       | Hides game window (sound and human players are not available in this mode). | [flag]                                                     | `False`       |
- | `--verbose`       | `-v`       | Verbosity switch, prints game info to the terminal.                         | [flag]                                                     | `False`       |
+| `--player1`       | `-p1`      | Type of the first player (green color).                                     | `arrows`, `wsad`, `random`, `heuristic`, `optimized`, `rl` | `arrows`      |
+| `--player2`       | `-p2`      | Type of the second player (red color).                                      | `arrows`, `wsad`, `random`, `heuristic`, `optimized`, `rl` | `random`      |
+| `--arena-size`    | `-a`       | Size of the square game arena (in tiles).                                   | Integers between `10`-`20`                                 | `10`          |
+| `--tile-size`     | `-t`       | Size of a square game tile (in pixels).                                     | Integers between `15`-`75`                                 | `50`          |
+| `--game-speed`    | `-s`       | Game speed, number of moves per second.                                     | Floats between `1.0`-`60.0`                                 | `2.0`         |
+| `--random-seed`   | `-r`       | RNG initialization seed, controls random behaviors of bots.                 | Integer                                                    | `42`          |
+| `--mute-sound`    | `-m`       | Mutes game sound effects.                                                   | [flag]                                                     | `False`       |
+| `--window-hidden` | `-w`       | Hides game window (sound and human players are not available in this mode). | [flag]                                                     | `False`       |
+| `--verbose`       | `-v`       | Verbosity switch, prints game info to the terminal.                         | [flag]                                                     | `False`       |
 
 Note: two human players can't use the same input method at the same time.
 
