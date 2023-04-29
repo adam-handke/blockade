@@ -28,11 +28,11 @@ class Blockade:
         #  2 - player2 head
         # -2 - player2 tail
         # 999 - player collision
-        starting_position = int(self.arena_size / 4)
+        self.starting_position = int(self.arena_size / 4)
         # player1 starts in the bottom-right corner
-        self.game_matrix[self.arena_size - starting_position - 1, self.arena_size - starting_position - 1] = 1
+        self.game_matrix[self.arena_size - self.starting_position - 1, self.arena_size - self.starting_position - 1] = 1
         # player2 starts in the upper-left corner
-        self.game_matrix[starting_position, starting_position] = 2
+        self.game_matrix[self.starting_position, self.starting_position] = 2
 
         self.move_dict = {'up': (-1, 0), 'down': (1, 0), 'left': (0, -1), 'right': (0, 1)}  # (y, x) offset tuples
         self.move_counter = 0

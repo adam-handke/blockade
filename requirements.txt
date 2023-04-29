@@ -1,2 +1,4 @@
 arcade==2.6.17
-numpy==1.24.2
+numpy~=1.18.5
+gymnasium~=0.28.1
+pettingzoo~=1.22.3
