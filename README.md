@@ -28,6 +28,9 @@ The player which survives wins!
 ## Requirements
 - Python Arcade
 - NumPy
+- Gymnasium
+- PettingZoo
+- Stable-Baselines3 (**at least 2.0.0 for compatibility with Gymnasium**)
 
 Details in `requirements.txt`.
 
