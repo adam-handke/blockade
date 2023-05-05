@@ -1,11 +1,12 @@
 import numpy as np
+import random
 from stable_baselines3 import PPO
 
 from players.BasePlayer import BasePlayer
 
 
 class ReinforcementLearningBot(BasePlayer):
-    def __init__(self, verbose, model_name='PPO15'):
+    def __init__(self, verbose, model_name='players/PPO15v1'):
         super().__init__(verbose)
         self.model = PPO.load(model_name)
         self.action_map = {0: 'up', 1: 'down', 2: 'left', 3: 'right'}
@@ -22,7 +23,12 @@ class ReinforcementLearningBot(BasePlayer):
         action, _states = self.model.predict(translated_game_matrix)
         move = self.action_map[int(action)]
         if move in possible_moves.keys():
+            if self.verbose:
+                print(f'{self} selects possible move "{move}"', flush=True)
             return move
         else:
-            # TODO: handle impossible moves
-            return None
+            # handle impossible moves by selecting random possible move
+            random_move = random.choice(list(possible_moves.keys()))
+            if self.verbose:
+                print(f'{self} selected impossible move "{move}", so "{random_move}" was selected randomly instead', flush=True)
+            return random_move
