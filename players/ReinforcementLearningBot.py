@@ -1,14 +1,21 @@
 import numpy as np
 import random
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, A2C, DQN
 
 from players.BasePlayer import BasePlayer
 
 
 class ReinforcementLearningBot(BasePlayer):
-    def __init__(self, verbose, model_name='players/PPO15v1'):
+    def __init__(self, verbose, model_name='players/A2C15v1', model_type='a2c'):
         super().__init__(verbose)
-        self.model = PPO.load(model_name)
+        if model_type == 'ppo':
+            self.model = PPO.load(model_name)
+        elif model_type == 'a2c':
+            self.model = A2C.load(model_name)
+        elif model_type == 'dqn':
+            self.model = DQN.load(model_name)
+        else:
+            raise ValueError(f'{self}: unknown model_type: {model_type}')
         self.action_map = {0: 'up', 1: 'down', 2: 'left', 3: 'right'}
 
     def get_move(self, game_matrix, possible_moves, my_coords, opponent_coords):
