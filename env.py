@@ -42,9 +42,9 @@ class BlockadeEnv(ParallelEnv):
         return observations
 
     def next_observation(self, player_number):
-        matrix_map = {0: 0, 1: 1, 2: 1,
-                      -1: 2 if player_number == 1 else 3,
-                      -2: 2 if player_number == 2 else 3}
+        matrix_map = {0: 0, -1: 1, -2: 1,
+                      1: 2 if player_number == 1 else 3,
+                      2: 2 if player_number == 2 else 3}
         # translate game_matrix values to player_number-irrelevant generalisation
         # 0: empty, 1: any tail, 2: player head, 3: enemy head
         return np.vectorize(matrix_map.get)(self.game_matrix)
