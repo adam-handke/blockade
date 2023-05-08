@@ -64,6 +64,15 @@ python blockade.py [-h]
 
 Note: two human players can't use the same input method at the same time.
 
+## Bot training
+
+### Optimized bot
+![Evolution plot](https://github.com/adam-handke/blockade/blob/main/training/avg-weight-evolution2.png?raw=true)
+
+### Reinforcement learning bot
+![RL training plot](https://github.com/adam-handke/blockade/blob/main/training/A2C15v2_training_log_plot.png?raw=true)
+
+
 ## Bot performance comparison
 
 #TODO
