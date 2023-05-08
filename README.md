@@ -3,10 +3,10 @@
 Python remake of [a 1976 multiplayer snake-like game](https://en.wikipedia.org/wiki/Blockade_(video_game)) created in [Python Arcade](https://api.arcade.academy/en/latest/).
 
 The game currently supports only 2 players. Humans can use arrows or WSAD. There are 4 types of AI bots:
-- **Random** - randomly selects one of the possible move directions (avoids immediate death until it's inevitable).
-- **Heuristic** - always chases the opponent while dodging death (moves scored by Manhattan distance to the opponent and available area, move is randomly selected in case of a tie).
-- **Optimized** - the best bot achieved in an evolutionary optimization process, similar to the Heuristic bot but the behavior is modified by 4 weights (agoraphillic/agoraphobic, aggressive/elusive, evasive/ballsy, preferring straight lines/turns).
-- **Reinforcement learning** - bot trained from many games as a policy.
+- **Random** - randomly selects one of the possible move directions (the bot avoids immediate death until it's inevitable).
+- **Heuristic** - moves heuristically scored by Manhattan distance to the opponent and available area, a move is randomly selected in case of a tie (the bot always chases the opponent while dodging death).
+- **Optimized** - the best bot achieved in a custom competitive coevolution process, it's similar to the Heuristic bot but the behavior is modified by 4 weights (agoraphillic/agoraphobic, aggressive/elusive, evasive/ballsy, preferring straight lines/turns).
+- **Reinforcement learning** - bot trained on many games while receiving rewards after every step. The training environment is a custom [`ParallelEnv`](https://pettingzoo.farama.org/api/parallel/) created using [Gymnasium](https://github.com/Farama-Foundation/Gymnasium), [PettingZoo](https://github.com/Farama-Foundation/PettingZoo) and [SuperSuit](https://github.com/Farama-Foundation/SuperSuit). The bot is a tuned [`A2C`](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) model from [Stable Baselines 3](https://github.com/DLR-RM/stable-baselines3) trained on 20 million steps.
 
 The player which survives wins!
 
@@ -28,8 +28,6 @@ The player which survives wins!
 ## Requirements
 - Python Arcade
 - NumPy
-- Gymnasium
-- PettingZoo
 - Stable-Baselines3 (**at least 2.0.0 for compatibility with Gymnasium**)
 
 Details in `requirements.txt`.
