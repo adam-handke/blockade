@@ -8,6 +8,7 @@ from players.BasePlayer import BasePlayer
 class ReinforcementLearningBot(BasePlayer):
     def __init__(self, verbose, model_name='players/A2C15v2', model_type='a2c', model_size=15):
         super().__init__(verbose)
+        self.model_name = model_name
         if model_type == 'ppo':
             self.model = PPO.load(model_name)
         elif model_type == 'a2c':
@@ -18,6 +19,9 @@ class ReinforcementLearningBot(BasePlayer):
             raise ValueError(f'{self}: unknown model_type: {model_type}')
         self.action_map = {0: 'up', 1: 'down', 2: 'left', 3: 'right'}
         self.model_size = model_size
+        
+    def __str__(self):
+        return super().__str__() + f' ({self.model_name[-7:]})'
 
     def get_move(self, game_matrix, possible_moves, my_coords, opponent_coords):
         player_number = int(abs(game_matrix[my_coords]))
