@@ -6,7 +6,7 @@ from players.BasePlayer import BasePlayer
 
 
 class ReinforcementLearningBot(BasePlayer):
-    def __init__(self, verbose, model_name='players/A2C15v1', model_type='a2c', model_size=15):
+    def __init__(self, verbose, model_name='players/A2C15v2', model_type='a2c', model_size=15):
         super().__init__(verbose)
         if model_type == 'ppo':
             self.model = PPO.load(model_name)

@@ -133,3 +133,6 @@ dmypy.json
 
 # Data archives
 *.gz
+
+# Training logs
+/training/log/*
