@@ -75,4 +75,21 @@ Note: two human players can't use the same input method at the same time.
 
 ## Bot performance comparison
 
-#TODO
+### Base results 
+
+Wins/draws/loses from the perspective of Player 1.
+
+| Player 2 \ Player 1      | RandomBot   | HeuristicBot | OptimizedBot | ReinforcementLearningBot |
+|--------------------------|-------------|--------------|--------------|--------------------------|
+| RandomBot                | 480/66/454  | 834/129/37   | 849/128/23   | 560/94/346               |
+| HeuristicBot             | 43/85/872   | 344/166/490  | 512/88/400   | 24/516/460               |
+| OptimizedBot             | 55/137/808  | 272/354/374  | 385/221/394  | 1/931/68                 |
+| ReinforcementLearningBot | 329/126/545 | 829/100/71   | 0/1000/0     | 386/371/243              |
+
+### Aggregated results
+
+| Bot type    | RandomBot | HeuristicBot | OptimizedBot | ReinforcementLearningBot |
+|-------------|-----------|--------------|--------------|--------------------------|
+| Total wins  | 1767      | 4501         | 3390         | 1830                     |
+| Total draws | 831       | 1604         | 3080         | 3509                     |
+| Total loses | 5402      | 1895         | 1530         | 2661                     |
