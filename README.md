@@ -1,12 +1,13 @@
 # Blockade
 
-Python remake of [a 1976 multiplayer snake-like game](https://en.wikipedia.org/wiki/Blockade_(video_game)) created in [Python Arcade](https://api.arcade.academy/en/latest/).
+Python remake of [the 1976 multiplayer snake-like game](https://en.wikipedia.org/wiki/Blockade_(video_game)) created in [Python Arcade](https://github.com/pythonarcade/arcade).
 
-The game currently supports only 2 players. Humans can use arrows or WSAD. There are 4 types of AI bots:
-- **Random** - randomly selects one of the possible move directions (the bot avoids immediate death until it's inevitable).
-- **Heuristic** - moves heuristically scored by Manhattan distance to the opponent and available area, a move is randomly selected in case of a tie (the bot always chases the opponent while dodging death).
+The game currently supports only 2 players. There are 5 types of players (1 human and 4 AI bots):
+- **Human** - controlling with arrows or WSAD.
+- **Random** - a bot that randomly selects one of the possible move directions (moves erratically but avoids immediate death until it's inevitable).
+- **Heuristic** - a bot with moves heuristically scored by the difference of available area (calculated with [flood fill](https://en.wikipedia.org/wiki/Flood_fill) algorithm) and [Manhattan distance](https://en.wikipedia.org/wiki/Taxicab_geometry) to the opponent (the bot always chases the opponent while dodging death). The move with the highest score is selected unless there is a tie, then it's chosen randomly out of the top-scored moves.
 - **Optimized** - the best bot achieved in a custom competitive coevolution process, it's similar to the Heuristic bot but the behavior is modified by 4 weights (agoraphillic/agoraphobic, aggressive/elusive, evasive/ballsy, preferring straight lines/turns).
-- **Reinforcement learning** - bot trained on many games while receiving rewards after every step. The training environment is a custom [`ParallelEnv`](https://pettingzoo.farama.org/api/parallel/) created using [Gymnasium](https://github.com/Farama-Foundation/Gymnasium), [PettingZoo](https://github.com/Farama-Foundation/PettingZoo) and [SuperSuit](https://github.com/Farama-Foundation/SuperSuit). The bot is a tuned [`A2C`](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) model from [Stable Baselines 3](https://github.com/DLR-RM/stable-baselines3) trained on 20 million steps.
+- **Reinforcement learning** - a bot trained on many games while receiving rewards after every step. The training environment is a custom [`ParallelEnv`](https://pettingzoo.farama.org/api/parallel/) created using [Gymnasium](https://github.com/Farama-Foundation/Gymnasium), [PettingZoo](https://github.com/Farama-Foundation/PettingZoo) and [SuperSuit](https://github.com/Farama-Foundation/SuperSuit). The model is a tuned [`A2C`](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) from [Stable Baselines 3](https://github.com/DLR-RM/stable-baselines3) trained on 20 million steps.
 
 The player which survives wins!
 
@@ -26,9 +27,11 @@ The player which survives wins!
 | Exit                | Escape                         |              
 
 ## Requirements
+
+For playing the game you only need:
 - Python Arcade
 - NumPy
-- Stable-Baselines3 (**at least 2.0.0 for compatibility with Gymnasium**)
+- Stable-Baselines3 (**at least 2.0.0**)
 
 Details in `requirements.txt`.
 
